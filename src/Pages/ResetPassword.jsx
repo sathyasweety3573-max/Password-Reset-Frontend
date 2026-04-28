@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Logo from "../components/Logo";
 import Footer from "../components/FooterContent";
 import { Formik, Form, Field, ErrorMessage } from "formik";
@@ -13,44 +13,7 @@ function ResetPassword() {
 
   const navigate = useNavigate();
 
-  const [tokenError, setTokenError] = useState("");
-
   console.log("TOKEN FROM URL:", token);
-
-  // VERIFY TOKEN WHEN PAGE LOADS
-  useEffect(() => {
-
-    const verifyToken = async () => {
-
-      try {
-
-        const response = await axios.get(
-          `https://password-reset-backend-1-e0hb.onrender.com/api/auth/verify-reset-token/${token}`
-        );
-
-        console.log(
-          "TOKEN VERIFY RESPONSE:",
-          response.data
-        );
-
-      } catch (error) {
-
-        console.log(
-          "TOKEN VERIFY ERROR:",
-          error.response?.data
-        );
-
-        setTokenError(
-          "Invalid or expired token"
-        );
-      }
-    };
-
-    if (token) {
-      verifyToken();
-    }
-
-  }, [token]);
 
   // initial values
   const initialValues = {
@@ -105,10 +68,16 @@ function ResetPassword() {
         values
       );
 
+      // IMPORTANT DEBUG
+      const url =
+        `https://password-reset-backend-1-e0hb.onrender.com/api/auth/reset-password/${token}`;
+
+      console.log("API URL:", url);
+
       // reset password api
       const response =
         await axios.post(
-          `https://password-reset-backend-1-e0hb.onrender.com/api/auth/reset-password/${token}`,
+          url,
           {
 
             newPassword:
@@ -139,12 +108,18 @@ function ResetPassword() {
     } catch (error) {
 
       console.log(
-        "RESET ERROR:",
+        "FULL RESET ERROR:",
+        error
+      );
+
+      console.log(
+        "RESET ERROR RESPONSE:",
         error.response?.data
       );
 
       alert(
         error.response?.data?.error ||
+        error.response?.data?.message ||
         "Password reset failed"
       );
 
@@ -153,27 +128,6 @@ function ResetPassword() {
       setSubmitting(false);
     }
   };
-
-  // INVALID TOKEN UI
-  if (tokenError) {
-
-    return (
-
-      <div className="max-w-4xl mx-auto p-8 min-h-screen">
-
-        <Logo />
-
-        <h1 className="text-3xl font-bold text-center text-red-500">
-          Invalid or Expired Token
-        </h1>
-
-        <p className="text-center mt-4 text-gray-600">
-          Please request a new password reset link.
-        </p>
-
-      </div>
-    );
-  }
 
   return (
 

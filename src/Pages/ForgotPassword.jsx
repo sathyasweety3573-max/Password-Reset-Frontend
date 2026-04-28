@@ -21,6 +21,11 @@ function ForgotPassword() {
   const navigate =
     useNavigate();
 
+  // IMPORTANT
+  // SAME BACKEND URL
+  const API_URL =
+    "https://password-reset-backend-iaah.onrender.com";
+
   // initial values
   const initialValues = {
 
@@ -68,7 +73,7 @@ function ForgotPassword() {
       const response =
         await axios.post(
 
-          "https://password-reset-backend-1-e0hb.onrender.com/api/auth/forgot-password",
+          `${API_URL}/api/auth/forgot-password`,
 
           values
         );
@@ -96,7 +101,7 @@ function ForgotPassword() {
         resetLink
       );
 
-      // open reset page automatically
+      // open reset page
       window.open(
         resetLink,
         "_blank"
