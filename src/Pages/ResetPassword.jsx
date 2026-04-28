@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Logo from "../components/Logo";
 import Footer from "../components/FooterContent";
 import { Formik, Form, Field, ErrorMessage } from "formik";
@@ -7,137 +7,370 @@ import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 
 function ResetPassword() {
-  // Get token from URL
-  const { token } = useParams();
 
-  console.log(token)
+  // get token from URL
+  const { token } = useParams();
 
   const navigate = useNavigate();
 
-  //  Step 1: Initial values for form
+  const [tokenError, setTokenError] = useState("");
+
+  console.log("TOKEN FROM URL:", token);
+
+  // VERIFY TOKEN WHEN PAGE LOADS
+  useEffect(() => {
+
+    const verifyToken = async () => {
+
+      try {
+
+        const response = await axios.get(
+          `https://password-reset-backend-1-e0hb.onrender.com/api/auth/verify-reset-token/${token}`
+        );
+
+        console.log(
+          "TOKEN VERIFY RESPONSE:",
+          response.data
+        );
+
+      } catch (error) {
+
+        console.log(
+          "TOKEN VERIFY ERROR:",
+          error.response?.data
+        );
+
+        setTokenError(
+          "Invalid or expired token"
+        );
+      }
+    };
+
+    if (token) {
+      verifyToken();
+    }
+
+  }, [token]);
+
+  // initial values
   const initialValues = {
     newPassword: "",
     confirmPassword: "",
   };
 
-  // Step 2 : Validation schema using yup
-
+  // validation schema
   const validationSchema = Yup.object({
+
     newPassword: Yup.string()
-      .min(6, "Password must be at least 6 characters")
-      .required("Password is required"),
+      .min(
+        6,
+        "Password must be at least 6 characters"
+      )
+      .required(
+        "Password is required"
+      ),
 
     confirmPassword: Yup.string()
-      .oneOf([Yup.ref("newPassword")], "Passwords must match")
-      .required("confirmPassword is required"),
+
+      .oneOf(
+        [Yup.ref("newPassword")],
+        "Passwords must match"
+      )
+
+      .required(
+        "Confirm password is required"
+      ),
   });
 
-  //  Step 3: What happens when form is submitted
-  const onSubmit = async (values, { setSubmitting, resetForm }) => {
-    try {
-      console.log(values);
+  // form submit
+  const onSubmit = async (
+    values,
+    {
+      setSubmitting,
+      resetForm,
+    }
+  ) => {
 
-      // Start loading
+    try {
+
       setSubmitting(true);
 
-      // API call
-      const response = await axios.post(
-        `https://password-reset-backend-iaah.onrender.com/api/auth/reset-password/${token}`, //  backend URL
-        values,
+      console.log(
+        "TOKEN SENT:",
+        token
       );
 
-      // Success message
-      alert(response.data.message || "Password reset successful!");
+      console.log(
+        "FORM VALUES:",
+        values
+      );
 
-      // Reset form after success
+      // reset password api
+      const response =
+        await axios.post(
+          `https://password-reset-backend-1-e0hb.onrender.com/api/auth/reset-password/${token}`,
+          {
+
+            newPassword:
+              values.newPassword,
+
+            confirmPassword:
+              values.confirmPassword,
+          }
+        );
+
+      console.log(
+        "RESET RESPONSE:",
+        response.data
+      );
+
+      // success message
+      alert(
+        response.data.message ||
+        "Password reset successful!"
+      );
+
+      // reset form
       resetForm();
 
-      //  Navigate to signin page
+      // navigate success page
       navigate("/success");
+
     } catch (error) {
-      // Error message
+
+      console.log(
+        "RESET ERROR:",
+        error.response?.data
+      );
+
       alert(
         error.response?.data?.error ||
-          "Password reset failed. Please try again.",
+        "Password reset failed"
       );
+
     } finally {
-      // Stop loading
+
       setSubmitting(false);
     }
   };
 
+  // INVALID TOKEN UI
+  if (tokenError) {
+
+    return (
+
+      <div className="max-w-4xl mx-auto p-8 min-h-screen">
+
+        <Logo />
+
+        <h1 className="text-3xl font-bold text-center text-red-500">
+          Invalid or Expired Token
+        </h1>
+
+        <p className="text-center mt-4 text-gray-600">
+          Please request a new password reset link.
+        </p>
+
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-4xl mx-auto p-8 min-h-screen">
+
+    <div
+      className="
+        max-w-4xl
+        mx-auto
+        p-8
+        min-h-screen
+      "
+    >
+
       <Logo />
-      <h1 className="text-3xl font-bold text-center ">Create New Password </h1>
-      <p className="text-center mt-4 text-gray-600">
-        Enter your email address below to complete the reset
-        <br /> process. Ensure your new password is strong.
+
+      <h1
+        className="
+          text-3xl
+          font-bold
+          text-center
+        "
+      >
+        Create New Password
+      </h1>
+
+      <p
+        className="
+          text-center
+          mt-4
+          text-gray-600
+        "
+      >
+        Enter your new password
+        below to complete
+        the reset process.
       </p>
 
-      {/* Formik starts here */}
-
       <Formik
-        initialValues={initialValues}
-        validationSchema={validationSchema}
+        initialValues={
+          initialValues
+        }
+
+        validationSchema={
+          validationSchema
+        }
+
         onSubmit={onSubmit}
       >
-        {({ isSubmitting }) => (
-          <div className="mt-2 max-w-xl mx-auto bg-white p-4 ">
-            <Form action="">
+
+        {({
+          isSubmitting,
+        }) => (
+
+          <div
+            className="
+              mt-2
+              max-w-xl
+              mx-auto
+              bg-white
+              p-4
+            "
+          >
+
+            <Form>
+
+              {/* New Password */}
+
               <label
-                className="block font-semibold text-gray-800 mt-4"
-                htmlFor="password"
+                className="
+                  block
+                  font-semibold
+                  text-gray-800
+                  mt-4
+                "
               >
                 New Password
               </label>
 
               <Field
-                className="text-gray-600 border border-gray-300 w-full p-2 rounded mt-1 bg-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="
+                  text-gray-600
+                  border
+                  border-gray-300
+                  w-full
+                  p-2
+                  rounded
+                  mt-1
+                  bg-transparent
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-green-500
+                "
+
                 name="newPassword"
+
                 type="password"
-                placeholder="Enter your password"
+
+                placeholder="
+                  Enter new password
+                "
               />
 
               <ErrorMessage
                 name="newPassword"
+
                 component="div"
-                className="text-red-500 text-sm"
-              ></ErrorMessage>
+
+                className="
+                  text-red-500
+                  text-sm
+                "
+              />
+
+              {/* Confirm Password */}
 
               <label
-                className="block font-semibold text-gray-800 mt-4"
-                htmlFor="confirmPassword"
+                className="
+                  block
+                  font-semibold
+                  text-gray-800
+                  mt-4
+                "
               >
-                Confirm New Password
+                Confirm Password
               </label>
 
               <Field
-                className="text-gray-600 border border-gray-300 w-full p-2 rounded mt-1 bg-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="
+                  text-gray-600
+                  border
+                  border-gray-300
+                  w-full
+                  p-2
+                  rounded
+                  mt-1
+                  bg-transparent
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-green-500
+                "
+
                 name="confirmPassword"
+
                 type="password"
-                placeholder="Confirm your password"
+
+                placeholder="
+                  Confirm password
+                "
               />
 
               <ErrorMessage
                 name="confirmPassword"
+
                 component="div"
-                className="text-red-500 text-sm"
-              ></ErrorMessage>
+
+                className="
+                  text-red-500
+                  text-sm
+                "
+              />
 
               <button
-                className="w-full bg-black text-white py-2 px-4 rounded mt-4 hover:bg-gray-800 font-semibold  cursor-pointer"
+
+                className="
+                  w-full
+                  bg-black
+                  text-white
+                  py-2
+                  px-4
+                  rounded
+                  mt-4
+                  hover:bg-gray-800
+                  font-semibold
+                  cursor-pointer
+                "
+
                 type="submit"
-                disabled={isSubmitting}
+
+                disabled={
+                  isSubmitting
+                }
               >
-                {isSubmitting ? "Resetting ..." : " Reset Password"}
+
+                {isSubmitting
+                  ? "Resetting..."
+                  : "Reset Password"}
+
               </button>
+
             </Form>
 
             <Footer />
+
           </div>
         )}
+
       </Formik>
+
     </div>
   );
 }
