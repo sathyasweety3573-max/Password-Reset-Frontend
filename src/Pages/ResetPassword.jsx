@@ -15,7 +15,7 @@ function ResetPassword() {
   
   // SAME BACKEND URL
   const API_URL =
-    "https://password-reset-backend-iaah.onrender.com";
+    "https://password-reset-backend-1-e0hb.onrender.com";
 
   console.log("TOKEN FROM URL:", token);
 
