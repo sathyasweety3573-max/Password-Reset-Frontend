@@ -21,9 +21,10 @@ function ForgotPassword() {
   const navigate =
     useNavigate();
 
-  // USE CORRECT BACKEND URL
+ 
+  // USE SAME BACKEND URL EVERYWHERE
   const API_URL =
-    "https://password-reset-backend-1-e0hb.onrender.com";
+    "https://password-reset-backend-iaah.onrender.com";
 
   // initial values
   const initialValues = {
@@ -82,40 +83,18 @@ function ForgotPassword() {
         response.data
       );
 
-      // get token
-      const token =
-        response.data.token;
-
-      console.log(
-        "TOKEN:",
-        token
+      // SUCCESS MESSAGE
+      alert(
+        "Password reset email sent successfully. Please check your email."
       );
-
-      // check token
-      if (!token) {
-
-        alert(
-          "Token not received from backend"
-        );
-
-        return;
-      }
-
-      // reset link
-      const resetLink =
-        `https://e-mart-web.netlify.app/reset-password/${token}`;
-
-      console.log(
-        "RESET LINK:",
-        resetLink
-      );
-
-      // open reset page
-      window.location.href =
-        resetLink;
 
       // reset form
       resetForm();
+
+      // navigate
+      navigate(
+        "/check-email"
+      );
 
     } catch (error) {
 
