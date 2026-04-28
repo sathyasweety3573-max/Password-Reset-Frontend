@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import Logo from "../components/Logo";
-
 import Footer from "../components/FooterContent";
 
 import {
@@ -28,6 +27,14 @@ function ResetPassword() {
   const navigate =
     useNavigate();
 
+  const [tokenValid, setTokenValid] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  // IMPORTANT
+  // USE ONLY THIS BACKEND URL
   const API_URL =
     "https://password-reset-backend-1-e0hb.onrender.com";
 
@@ -36,6 +43,63 @@ function ResetPassword() {
     token
   );
 
+  // VERIFY TOKEN WHEN PAGE LOADS
+  useEffect(() => {
+
+    const verifyToken =
+      async () => {
+
+        try {
+
+          const response =
+            await axios.get(
+
+              `${API_URL}/api/auth/verify-reset-token/${token}`
+            );
+
+          console.log(
+            "VERIFY RESPONSE:",
+            response.data
+          );
+
+          if (
+            response.data.success
+          ) {
+
+            setTokenValid(true);
+          }
+
+        } catch (error) {
+
+          console.log(
+            "VERIFY ERROR:",
+            error.response?.data
+          );
+
+          alert(
+            error.response?.data?.error ||
+
+            "Invalid or expired token"
+          );
+
+          navigate(
+            "/forgot-password"
+          );
+
+        } finally {
+
+          setLoading(false);
+        }
+      };
+
+    if (token) {
+
+      verifyToken();
+    }
+
+  }, [token, navigate]);
+
+  // INITIAL VALUES
   const initialValues = {
 
     newPassword: "",
@@ -43,6 +107,7 @@ function ResetPassword() {
     confirmPassword: "",
   };
 
+  // VALIDATION
   const validationSchema =
     Yup.object({
 
@@ -71,6 +136,7 @@ function ResetPassword() {
           ),
     });
 
+  // SUBMIT
   const onSubmit = async (
 
     values,
@@ -86,28 +152,20 @@ function ResetPassword() {
 
       setSubmitting(true);
 
-      const cleanToken =
-        token.trim();
-
       console.log(
-        "CLEAN TOKEN:",
-        cleanToken
+        "TOKEN SENT:",
+        token
       );
 
-      const url =
-
-        `${API_URL}/api/auth/reset-password/${cleanToken}`;
-
       console.log(
-        "API URL:",
-        url
+        "FORM VALUES:",
+        values
       );
 
       const response =
-
         await axios.post(
 
-          url,
+          `${API_URL}/api/auth/reset-password/${token}`,
 
           {
 
@@ -135,18 +193,15 @@ function ResetPassword() {
     } catch (error) {
 
       console.log(
-        "FULL ERROR:",
-        error
-      );
-
-      console.log(
-        "ERROR RESPONSE:",
+        "RESET ERROR:",
         error.response?.data
       );
 
       alert(
 
         error.response?.data?.error ||
+
+        error.response?.data?.message ||
 
         "Password reset failed"
       );
@@ -156,6 +211,29 @@ function ResetPassword() {
       setSubmitting(false);
     }
   };
+
+  // LOADING
+  if (loading) {
+
+    return (
+
+      <div
+        className="
+          text-center
+          mt-10
+          text-xl
+        "
+      >
+        Verifying token...
+      </div>
+    );
+  }
+
+  // INVALID TOKEN
+  if (!tokenValid) {
+
+    return null;
+  }
 
   return (
 
@@ -179,6 +257,17 @@ function ResetPassword() {
       >
         Reset Password
       </h1>
+
+      <p
+        className="
+          text-center
+          mt-4
+          text-gray-600
+        "
+      >
+        Enter your new password
+        below.
+      </p>
 
       <Formik
 
@@ -211,54 +300,85 @@ function ResetPassword() {
 
             <Form>
 
-              <label>
+              {/* NEW PASSWORD */}
+
+              <label
+                className="
+                  block
+                  font-semibold
+                  mt-4
+                "
+              >
                 New Password
               </label>
 
               <Field
+
                 type="password"
+
                 name="newPassword"
+
+                placeholder="Enter new password"
+
                 className="
                   border
                   w-full
                   p-2
                   mt-1
+                  rounded
                 "
               />
 
               <ErrorMessage
+
                 name="newPassword"
+
                 component="div"
+
                 className="
                   text-red-500
+                  text-sm
                 "
               />
 
+              {/* CONFIRM PASSWORD */}
+
               <label
                 className="
-                  mt-4
                   block
+                  font-semibold
+                  mt-4
                 "
               >
                 Confirm Password
               </label>
 
               <Field
+
                 type="password"
+
                 name="confirmPassword"
+
+                placeholder="Confirm password"
+
                 className="
                   border
                   w-full
                   p-2
                   mt-1
+                  rounded
                 "
               />
 
               <ErrorMessage
+
                 name="confirmPassword"
+
                 component="div"
+
                 className="
                   text-red-500
+                  text-sm
                 "
               />
 
@@ -276,6 +396,7 @@ function ResetPassword() {
                   text-white
                   p-2
                   mt-4
+                  rounded
                 "
               >
 
