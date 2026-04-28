@@ -1,195 +1,397 @@
-import React from "react";
+import User from "../models/user.schema.js";
+import bcrypt from "bcrypt";
+import sendEmail from "../utils/sendEmail.js";
+import crypto from "crypto";
 
-import Logo from "../components/Logo";
-import Footer from "../components/FooterContent";
 
-import {
-  Formik,
-  Form,
-  Field,
-  ErrorMessage,
-} from "formik";
+// LOGIN
+async function Login(req, res) {
 
-import * as Yup from "yup";
+  try {
 
-import axios from "axios";
+    const { email, password } =
+      req.body;
 
-import {
-  useParams,
-  useNavigate,
-} from "react-router-dom";
+    const lowerCaseEmail =
+      email.toLowerCase().trim();
 
-function ResetPassword() {
+    const user =
+      await User.findOne({
 
-  const { token } = useParams();
+        email: {
+          $regex: new RegExp(
+            "^" +
+            lowerCaseEmail +
+            "$",
+            "i"
+          ),
+        },
 
-  const navigate = useNavigate();
+      });
 
-  const API_URL =
-    "https://password-reset-backend-1-e0hb.onrender.com";
+    if (!user) {
 
-  console.log("TOKEN FROM URL:", token);
+      return res.status(400).json({
 
-  const initialValues = {
-    newPassword: "",
-    confirmPassword: "",
-  };
+        success: false,
 
-  const validationSchema = Yup.object({
+        error:
+          "Invalid credentials",
 
-    newPassword: Yup.string()
-      .min(6, "Minimum 6 characters")
-      .required("Required"),
+      });
 
-    confirmPassword: Yup.string()
-      .oneOf(
-        [Yup.ref("newPassword")],
-        "Passwords must match"
-      )
-      .required("Required"),
-  });
-
-  const onSubmit = async (
-    values,
-    { setSubmitting }
-  ) => {
-
-    try {
-
-      setSubmitting(true);
-
-      const cleanToken =
-        encodeURIComponent(
-          token.trim()
-        );
-
-      console.log(
-        "FINAL TOKEN:",
-        cleanToken
-      );
-
-      const response =
-        await axios.post(
-
-          `${API_URL}/api/auth/reset-password/${cleanToken}`,
-
-          {
-            newPassword:
-              values.newPassword,
-
-            confirmPassword:
-              values.confirmPassword,
-          }
-
-        );
-
-      console.log(
-        "SUCCESS:",
-        response.data
-      );
-
-      alert(
-        "Password reset successful"
-      );
-
-      navigate("/");
-
-    } catch (error) {
-
-      console.log(
-        "RESET ERROR:",
-        error.response?.data
-      );
-
-      alert(
-        error.response?.data?.error ||
-        "Password reset failed"
-      );
     }
 
-    finally {
+    const isPasswordValid =
+      await bcrypt.compare(
+        password,
+        user.password
+      );
 
-      setSubmitting(false);
+    if (!isPasswordValid) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Invalid credentials",
+
+      });
+
     }
-  };
 
-  return (
+    return res.status(200).json({
 
-    <div className="max-w-4xl mx-auto p-8 min-h-screen">
+      success: true,
 
-      <Logo />
+      message:
+        "Authentication successful",
 
-      <h1 className="text-3xl font-bold text-center">
-        Reset Password
-      </h1>
+      user: user._id,
 
-      <Formik
-        initialValues={initialValues}
-        validationSchema={validationSchema}
-        onSubmit={onSubmit}
-      >
+    });
 
-        {({ isSubmitting }) => (
+  } catch (error) {
 
-          <div className="mt-2 max-w-xl mx-auto bg-white p-4">
+    console.log(
+      "LOGIN ERROR:",
+      error
+    );
 
-            <Form>
+    return res.status(500).json({
 
-              <label>
-                New Password
-              </label>
+      success: false,
 
-              <Field
-                type="password"
-                name="newPassword"
-                className="border w-full p-2 mt-1"
-              />
+      error:
+        "Server error",
 
-              <ErrorMessage
-                name="newPassword"
-                component="div"
-                className="text-red-500"
-              />
+    });
 
-              <label className="block mt-4">
-                Confirm Password
-              </label>
+  }
 
-              <Field
-                type="password"
-                name="confirmPassword"
-                className="border w-full p-2 mt-1"
-              />
-
-              <ErrorMessage
-                name="confirmPassword"
-                component="div"
-                className="text-red-500"
-              />
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-black text-white p-2 mt-4"
-              >
-
-                {isSubmitting
-                  ? "Resetting..."
-                  : "Reset Password"}
-
-              </button>
-
-            </Form>
-
-            <Footer />
-
-          </div>
-        )}
-
-      </Formik>
-
-    </div>
-  );
 }
 
-export default ResetPassword;
+
+// FORGOT PASSWORD
+async function forgotPassword(
+  req,
+  res
+) {
+
+  try {
+
+    const { email } =
+      req.body;
+
+    const lowerCaseEmail =
+      email.toLowerCase().trim();
+
+    const user =
+      await User.findOne({
+
+        email: {
+          $regex: new RegExp(
+            "^" +
+            lowerCaseEmail +
+            "$",
+            "i"
+          ),
+        },
+
+      });
+
+    console.log(
+      "FOUND USER:",
+      user
+    );
+
+    if (!user) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "User not found",
+
+      });
+
+    }
+
+    const token =
+      crypto
+        .randomBytes(20)
+        .toString("hex");
+
+    user.resetPasswordToken =
+      token;
+
+    user.resetPasswordExpires =
+      Date.now() + 3600000;
+
+    await user.save();
+
+    console.log(
+      "TOKEN SAVED:",
+      token
+    );
+
+    await sendEmail(
+      token,
+      lowerCaseEmail
+    );
+
+    return res.status(200).json({
+
+      success: true,
+
+      message:
+        "Reset email sent",
+
+    });
+
+  } catch (error) {
+
+    console.log(
+      "FORGOT PASSWORD ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+
+      success: false,
+
+      error:
+        "Server error",
+
+    });
+
+  }
+
+}
+
+
+// VERIFY TOKEN
+async function verifyResetToken(
+  req,
+  res
+) {
+
+  try {
+
+    const token =
+      req.params.token.trim();
+
+    const user =
+      await User.findOne({
+
+        resetPasswordToken:
+          token,
+
+      });
+
+    if (!user) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Invalid token",
+
+      });
+
+    }
+
+    return res.status(200).json({
+
+      success: true,
+
+      message:
+        "Token valid",
+
+    });
+
+  } catch (error) {
+
+    console.log(
+      "VERIFY TOKEN ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+
+      success: false,
+
+      error:
+        "Server error",
+
+    });
+
+  }
+
+}
+
+
+// RESET PASSWORD
+async function resetPassword(
+  req,
+  res
+) {
+
+  try {
+
+    const token =
+      req.params.token.trim();
+
+    const {
+      newPassword,
+      confirmPassword,
+    } = req.body;
+
+    console.log(
+      "TOKEN FROM FRONTEND:",
+      token
+    );
+
+    const allUsers =
+      await User.find();
+
+    console.log(
+      "ALL USERS TOKENS:"
+    );
+
+    allUsers.forEach((user) => {
+
+      console.log({
+
+        email: user.email,
+
+        token:
+          user.resetPasswordToken,
+
+      });
+
+    });
+
+    const user =
+      await User.findOne({
+
+        resetPasswordToken:
+          token,
+
+      });
+
+    console.log(
+      "MATCH USER:",
+      user
+    );
+
+    if (!user) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Invalid token",
+
+      });
+
+    }
+
+    if (
+      newPassword !==
+      confirmPassword
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Passwords do not match",
+
+      });
+
+    }
+
+    const salt =
+      await bcrypt.genSalt(10);
+
+    user.password =
+      await bcrypt.hash(
+        newPassword,
+        salt
+      );
+
+    user.resetPasswordToken =
+      null;
+
+    user.resetPasswordExpires =
+      null;
+
+    await user.save();
+
+    return res.status(200).json({
+
+      success: true,
+
+      message:
+        "Password reset successful",
+
+    });
+
+  } catch (error) {
+
+    console.log(
+      "RESET ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+
+      success: false,
+
+      error:
+        "Server error",
+
+    });
+
+  }
+
+}
+
+
+export {
+
+  Login,
+
+  forgotPassword,
+
+  verifyResetToken,
+
+  resetPassword,
+
+};
