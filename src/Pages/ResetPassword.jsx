@@ -1,189 +1,103 @@
 import React from "react";
-
 import Logo from "../components/Logo";
 import Footer from "../components/FooterContent";
-
-import {
-  Formik,
-  Form,
-  Field,
-  ErrorMessage,
-} from "formik";
-
+import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-
 import axios from "axios";
-
-import {
-  useParams,
-  useNavigate,
-} from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 function ResetPassword() {
 
-  // get token from url
-  const { token } =
-    useParams();
+  const { token } = useParams();
 
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
-  // IMPORTANT
+  
   // SAME BACKEND URL
   const API_URL =
     "https://password-reset-backend-iaah.onrender.com";
 
-  console.log(
-    "TOKEN FROM URL:",
-    token
-  );
+  console.log("TOKEN FROM URL:", token);
 
-  // initial values
   const initialValues = {
-
     newPassword: "",
-
     confirmPassword: "",
   };
 
-  // validation schema
-  const validationSchema =
-    Yup.object({
+  const validationSchema = Yup.object({
 
-      newPassword:
-        Yup.string()
+    newPassword: Yup.string()
+      .min(6, "Password must be at least 6 characters")
+      .required("Password is required"),
 
-          .min(
-            6,
-            "Password must be at least 6 characters"
-          )
+    confirmPassword: Yup.string()
+      .oneOf(
+        [Yup.ref("newPassword")],
+        "Passwords must match"
+      )
+      .required("Confirm password is required"),
+  });
 
-          .required(
-            "Password is required"
-          ),
+  const onSubmit = async (
+    values,
+    {
+      setSubmitting,
+      resetForm,
+    }
+  ) => {
 
-      confirmPassword:
-        Yup.string()
+    try {
 
-          .oneOf(
-            [
-              Yup.ref(
-                "newPassword"
-              ),
-            ],
-            "Passwords must match"
-          )
+      setSubmitting(true);
 
-          .required(
-            "Confirm password is required"
-          ),
-    });
+      console.log("TOKEN SENT:", token);
 
-  // form submit
-  const onSubmit =
-    async (
+      const response =
+        await axios.post(
 
-      values,
+          `${API_URL}/api/auth/reset-password/${token}`,
 
-      {
-        setSubmitting,
-        resetForm,
-      }
+          {
+            newPassword:
+              values.newPassword,
 
-    ) => {
-
-      try {
-
-        setSubmitting(
-          true
+            confirmPassword:
+              values.confirmPassword,
+          }
         );
 
-        console.log(
-          "TOKEN SENT:",
-          token
-        );
+      console.log(
+        "RESET RESPONSE:",
+        response.data
+      );
 
-        console.log(
-          "FORM VALUES:",
-          values
-        );
+      alert(
+        response.data.message ||
+        "Password reset successful!"
+      );
 
-        // api url
-        const url =
-          `${API_URL}/api/auth/reset-password/${token}`;
+      resetForm();
 
-        console.log(
-          "API URL:",
-          url
-        );
+      navigate("/success");
 
-        // api call
-        const response =
-          await axios.post(
+    } catch (error) {
 
-            url,
+      console.log(
+        "RESET ERROR:",
+        error.response?.data
+      );
 
-            {
+      alert(
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        "Password reset failed"
+      );
 
-              newPassword:
-                values.newPassword,
+    } finally {
 
-              confirmPassword:
-                values.confirmPassword,
-            }
-          );
-
-        console.log(
-          "RESET RESPONSE:",
-          response.data
-        );
-
-        // success alert
-        alert(
-          response.data
-            .message ||
-
-          "Password reset successful!"
-        );
-
-        // reset form
-        resetForm();
-
-        // navigate success page
-        navigate(
-          "/success"
-        );
-
-      } catch (error) {
-
-        console.log(
-          "FULL RESET ERROR:",
-          error
-        );
-
-        console.log(
-          "RESET ERROR RESPONSE:",
-          error.response?.data
-        );
-
-        alert(
-
-          error.response
-            ?.data?.error ||
-
-          error.response
-            ?.data?.message ||
-
-          "Password reset failed"
-        );
-
-      } finally {
-
-        setSubmitting(
-          false
-        );
-      }
-    };
+      setSubmitting(false);
+    }
+  };
 
   return (
 
@@ -221,18 +135,9 @@ function ResetPassword() {
       </p>
 
       <Formik
-
-        initialValues={
-          initialValues
-        }
-
-        validationSchema={
-          validationSchema
-        }
-
-        onSubmit={
-          onSubmit
-        }
+        initialValues={initialValues}
+        validationSchema={validationSchema}
+        onSubmit={onSubmit}
       >
 
         {({
@@ -251,8 +156,6 @@ function ResetPassword() {
 
             <Form>
 
-              {/* New Password */}
-
               <label
                 className="
                   block
@@ -265,7 +168,6 @@ function ResetPassword() {
               </label>
 
               <Field
-
                 className="
                   text-gray-600
                   border
@@ -279,29 +181,19 @@ function ResetPassword() {
                   focus:ring-2
                   focus:ring-green-500
                 "
-
                 name="newPassword"
-
                 type="password"
-
-                placeholder="
-                  Enter new password
-                "
+                placeholder="Enter new password"
               />
 
               <ErrorMessage
-
                 name="newPassword"
-
                 component="div"
-
                 className="
                   text-red-500
                   text-sm
                 "
               />
-
-              {/* Confirm Password */}
 
               <label
                 className="
@@ -315,7 +207,6 @@ function ResetPassword() {
               </label>
 
               <Field
-
                 className="
                   text-gray-600
                   border
@@ -329,22 +220,14 @@ function ResetPassword() {
                   focus:ring-2
                   focus:ring-green-500
                 "
-
                 name="confirmPassword"
-
                 type="password"
-
-                placeholder="
-                  Confirm password
-                "
+                placeholder="Confirm password"
               />
 
               <ErrorMessage
-
                 name="confirmPassword"
-
                 component="div"
-
                 className="
                   text-red-500
                   text-sm
@@ -352,13 +235,6 @@ function ResetPassword() {
               />
 
               <button
-
-                type="submit"
-
-                disabled={
-                  isSubmitting
-                }
-
                 className="
                   w-full
                   bg-black
@@ -371,12 +247,12 @@ function ResetPassword() {
                   font-semibold
                   cursor-pointer
                 "
+                type="submit"
+                disabled={isSubmitting}
               >
 
                 {isSubmitting
-
                   ? "Resetting..."
-
                   : "Reset Password"}
 
               </button>

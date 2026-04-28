@@ -21,7 +21,6 @@ function ForgotPassword() {
   const navigate =
     useNavigate();
 
-  // IMPORTANT
   // USE CORRECT BACKEND URL
   const API_URL =
     "https://password-reset-backend-1-e0hb.onrender.com";
