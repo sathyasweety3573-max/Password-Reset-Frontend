@@ -1,4 +1,7 @@
+import React from "react";
+
 import Logo from "../components/Logo";
+
 import Footer from "../components/FooterContent";
 
 import {
@@ -21,18 +24,17 @@ function ForgotPassword() {
   const navigate =
     useNavigate();
 
- 
-  // USE SAME BACKEND URL EVERYWHERE
+  // BACKEND URL
   const API_URL =
     "https://password-reset-backend-1-e0hb.onrender.com";
 
-  // initial values
+  // INITIAL VALUES
   const initialValues = {
 
     email: "",
   };
 
-  // validation schema
+  // VALIDATION
   const validationSchema =
     Yup.object({
 
@@ -47,7 +49,7 @@ function ForgotPassword() {
         ),
     });
 
-  // form submit
+  // SUBMIT
   const onSubmit = async (
 
     values,
@@ -61,21 +63,21 @@ function ForgotPassword() {
 
     try {
 
-      console.log(
-        "FORM VALUES:",
-        values
-      );
-
-      // loading start
       setSubmitting(true);
 
-      // api call
+      // API CALL
       const response =
         await axios.post(
 
           `${API_URL}/api/auth/forgot-password`,
 
-          values
+          {
+
+            email:
+              values.email
+                .toLowerCase()
+                .trim(),
+          }
         );
 
       console.log(
@@ -83,15 +85,14 @@ function ForgotPassword() {
         response.data
       );
 
-      // SUCCESS MESSAGE
+      // SUCCESS
       alert(
-        "Password reset email sent successfully. Please check your email."
+        "Password reset email sent successfully"
       );
 
-      // reset form
       resetForm();
 
-      // navigate
+      // GO CHECK EMAIL PAGE
       navigate(
         "/check-email"
       );
@@ -103,19 +104,17 @@ function ForgotPassword() {
         error.response?.data
       );
 
-      // error alert
       alert(
 
         error.response?.data?.error ||
 
         error.response?.data?.message ||
 
-        "Failed to send reset email. Please try again."
+        "Failed to send reset email"
       );
 
     } finally {
 
-      // loading stop
       setSubmitting(false);
     }
   };
@@ -140,7 +139,9 @@ function ForgotPassword() {
           text-center
         "
       >
+
         Forgot Password
+
       </h1>
 
       <p
@@ -150,13 +151,11 @@ function ForgotPassword() {
           text-gray-600
         "
       >
-        No worries!
 
         Enter your email
-        address below and
-        we will send you a
-        link to reset your
-        password.
+        to receive a
+        password reset link.
+
       </p>
 
       <Formik
@@ -180,7 +179,7 @@ function ForgotPassword() {
 
           <div
             className="
-              mt-2
+              mt-4
               max-w-xl
               mx-auto
               bg-white
@@ -190,6 +189,8 @@ function ForgotPassword() {
 
             <Form>
 
+              {/* EMAIL */}
+
               <label
                 className="
                   block
@@ -197,32 +198,26 @@ function ForgotPassword() {
                   text-gray-800
                 "
               >
+
                 Email
+
               </label>
 
               <Field
 
+                name="email"
+
+                type="email"
+
+                placeholder="Enter your email"
+
                 className="
-                  text-gray-600
                   border
                   border-gray-300
                   w-full
                   p-2
                   rounded
                   mt-1
-                  bg-transparent
-                  focus:outline-none
-                  focus:ring-2
-                  focus:ring-green-500
-                "
-
-                name="email"
-
-                type="email"
-
-                placeholder="
-                  Enter your email
-                  address
                 "
               />
 
@@ -238,6 +233,8 @@ function ForgotPassword() {
                 "
               />
 
+              {/* BUTTON */}
+
               <button
 
                 type="submit"
@@ -251,20 +248,17 @@ function ForgotPassword() {
                   bg-black
                   text-white
                   py-2
-                  px-4
                   rounded
                   mt-4
                   hover:bg-gray-800
-                  font-semibold
-                  cursor-pointer
                 "
               >
 
                 {isSubmitting
 
-                  ? "Submitting..."
+                  ? "Sending..."
 
-                  : "Submit"}
+                  : "Send Reset Link"}
 
               </button>
 
