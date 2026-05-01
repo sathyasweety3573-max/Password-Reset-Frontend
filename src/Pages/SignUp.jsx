@@ -2,7 +2,12 @@ import React from "react";
 
 import { Link, useNavigate } from "react-router-dom";
 
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import {
+  Formik,
+  Form,
+  Field,
+  ErrorMessage,
+} from "formik";
 
 import * as Yup from "yup";
 
@@ -17,11 +22,9 @@ function SignUp() {
   const navigate =
     useNavigate();
 
-  // BACKEND URL
   const API_URL =
     "https://password-reset-backend-1-e0hb.onrender.com";
 
-  // INITIAL VALUES
   const initialValues = {
 
     name: "",
@@ -31,126 +34,143 @@ function SignUp() {
     password: "",
 
     confirmPassword: "",
+
   };
 
-  // VALIDATION
   const validationSchema =
     Yup.object({
 
-      name: Yup.string()
+      name:
+        Yup.string()
+          .min(
+            3,
+            "Name must be at least 3 characters"
+          )
+          .required(
+            "Name is required"
+          ),
 
-        .min(
-          3,
-          "Name must be at least 3 characters"
-        )
+      email:
+        Yup.string()
+          .email(
+            "Invalid email format"
+          )
+          .required(
+            "Email is required"
+          ),
 
-        .required(
-          "Name is required"
-        ),
-
-      email: Yup.string()
-
-        .email(
-          "Invalid email format"
-        )
-
-        .required(
-          "Email is required"
-        ),
-
-      password: Yup.string()
-
-        .min(
-          6,
-          "Password must be at least 6 characters"
-        )
-
-        .required(
-          "Password is required"
-        ),
+      password:
+        Yup.string()
+          .min(
+            6,
+            "Password must be at least 6 characters"
+          )
+          .required(
+            "Password is required"
+          ),
 
       confirmPassword:
         Yup.string()
-
           .oneOf(
             [Yup.ref("password")],
             "Passwords must match"
           )
-
           .required(
             "Confirm Password is required"
           ),
+
     });
 
-  // SUBMIT FUNCTION
-  const onSubmit = async (
+  const onSubmit =
+    async (
+      values,
+      {
+        setSubmitting,
+        resetForm,
+      }
+    ) => {
 
-    values,
+      try {
 
-    {
-      setSubmitting,
-      resetForm,
-    }
+        setSubmitting(true);
 
-  ) => {
-
-    try {
-
-      setSubmitting(true);
-
-      // SEND DATA TO BACKEND
-      const response =
-        await axios.post(
-
-          `${API_URL}/api/user`,
-
-          {
-
-            name:
-              values.name,
-
-            email:
-              values.email
-                .toLowerCase()
-                .trim(),
-
-            password:
-              values.password,
-          }
+        console.log(
+          "SIGNUP VALUES:",
+          values
         );
 
-      // SUCCESS
-      alert(
+        const response =
+          await axios.post(
 
-        response.data.message ||
+            `${API_URL}/api/user`,
 
-        "Signup successful"
-      );
+            {
 
-      resetForm();
+              name:
+                values.name.trim(),
 
-      // GO TO LOGIN
-      navigate("/");
+              email:
+                values.email
+                  .toLowerCase()
+                  .trim(),
 
-    } catch (error) {
+              password:
+                values.password,
 
-      console.log(
-        "SIGNUP ERROR:",
-        error.response?.data
-      );
+            },
 
-      alert(
+            {
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+            }
 
-        error.response?.data?.error ||
+          );
 
-        "Signup failed"
-      );
+        console.log(
+          "SIGNUP RESPONSE:",
+          response.data
+        );
 
-    } finally {
+        alert(
+          response.data.message ||
+          "Signup successful"
+        );
 
-      setSubmitting(false);
-    }
-  };
+        resetForm();
+
+        navigate("/");
+
+      } catch (error) {
+
+        console.log(
+          "FULL SIGNUP ERROR:",
+          error
+        );
+
+        console.log(
+          "SIGNUP ERROR RESPONSE:",
+          error.response?.data
+        );
+
+        alert(
+
+          error.response?.data?.error ||
+
+          error.message ||
+
+          "Signup failed"
+
+        );
+
+      } finally {
+
+        setSubmitting(false);
+
+      }
+
+    };
 
   return (
 
@@ -172,6 +192,7 @@ function SignUp() {
           text-center
         "
       >
+
         Create Your{" "}
 
         <span
@@ -227,8 +248,6 @@ function SignUp() {
 
             <Form>
 
-              {/* NAME */}
-
               <label
                 className="
                   block
@@ -240,13 +259,9 @@ function SignUp() {
               </label>
 
               <Field
-
                 type="text"
-
                 name="name"
-
                 placeholder="Enter your name"
-
                 className="
                   border
                   border-gray-300
@@ -258,18 +273,13 @@ function SignUp() {
               />
 
               <ErrorMessage
-
                 name="name"
-
                 component="div"
-
                 className="
                   text-red-500
                   text-sm
                 "
               />
-
-              {/* EMAIL */}
 
               <label
                 className="
@@ -283,13 +293,9 @@ function SignUp() {
               </label>
 
               <Field
-
                 type="email"
-
                 name="email"
-
                 placeholder="Enter email"
-
                 className="
                   border
                   border-gray-300
@@ -301,18 +307,13 @@ function SignUp() {
               />
 
               <ErrorMessage
-
                 name="email"
-
                 component="div"
-
                 className="
                   text-red-500
                   text-sm
                 "
               />
-
-              {/* PASSWORD */}
 
               <label
                 className="
@@ -326,13 +327,9 @@ function SignUp() {
               </label>
 
               <Field
-
                 type="password"
-
                 name="password"
-
                 placeholder="Enter password"
-
                 className="
                   border
                   border-gray-300
@@ -344,18 +341,13 @@ function SignUp() {
               />
 
               <ErrorMessage
-
                 name="password"
-
                 component="div"
-
                 className="
                   text-red-500
                   text-sm
                 "
               />
-
-              {/* CONFIRM PASSWORD */}
 
               <label
                 className="
@@ -369,13 +361,9 @@ function SignUp() {
               </label>
 
               <Field
-
                 type="password"
-
                 name="confirmPassword"
-
                 placeholder="Confirm password"
-
                 className="
                   border
                   border-gray-300
@@ -387,27 +375,19 @@ function SignUp() {
               />
 
               <ErrorMessage
-
                 name="confirmPassword"
-
                 component="div"
-
                 className="
                   text-red-500
                   text-sm
                 "
               />
 
-              {/* BUTTON */}
-
               <button
-
                 type="submit"
-
                 disabled={
                   isSubmitting
                 }
-
                 className="
                   w-full
                   bg-black
@@ -420,9 +400,7 @@ function SignUp() {
               >
 
                 {isSubmitting
-
                   ? "Signing Up..."
-
                   : "Sign Up"}
 
               </button>
@@ -438,9 +416,7 @@ function SignUp() {
                 Already have an account?{" "}
 
                 <Link
-
                   to="/"
-
                   className="
                     font-semibold
                     hover:underline
@@ -456,12 +432,15 @@ function SignUp() {
             <Footer />
 
           </div>
+
         )}
 
       </Formik>
 
     </div>
+
   );
+
 }
 
 export default SignUp;
