@@ -6,75 +6,66 @@ import {
 } from "react-router-dom";
 
 import SignUp from "./Pages/SignUp";
-
 import SignIn from "./Pages/SignIn";
-
 import ForgotPassword from "./Pages/ForgotPassword";
-
 import CheckEmail from "./Pages/CheckEmail";
-
 import ResetPassword from "./Pages/ResetPassword";
-
 import WelcomeBlog from "./Pages/Welcome";
-
 import SuccessReset from "./Pages/SuccessReset";
 
 function App() {
 
   return (
 
-    <Routes>
+    <div>
 
-      {/* SIGN IN */}
+      <Routes>
 
-      <Route
-        path="/"
-        element={<SignIn />}
-      />
+        {/* SIGN IN */}
+        <Route
+          path="/"
+          element={<SignIn />}
+        />
 
-      {/* SIGN UP */}
+        {/* SIGN UP */}
+        <Route
+          path="/signup"
+          element={<SignUp />}
+        />
 
-      <Route
-        path="/signup"
-        element={<SignUp />}
-      />
+        {/* FORGOT PASSWORD */}
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
 
-      {/* FORGOT PASSWORD */}
+        {/* CHECK EMAIL */}
+        <Route
+          path="/check-email"
+          element={<CheckEmail />}
+        />
 
-      <Route
-        path="/forgot-password"
-        element={<ForgotPassword />}
-      />
+        {/* RESET PASSWORD */}
+        <Route
+          path="/reset-password/:token"
+          element={<ResetPassword />}
+        />
 
-      {/* CHECK EMAIL */}
+        {/* SUCCESS PAGE */}
+        <Route
+          path="/success"
+          element={<SuccessReset />}
+        />
 
-      <Route
-        path="/check-email"
-        element={<CheckEmail />}
-      />
+        {/* WELCOME PAGE */}
+        <Route
+          path="/welcome"
+          element={<WelcomeBlog />}
+        />
 
-      {/* RESET PASSWORD */}
+      </Routes>
 
-      <Route
-        path="/reset-password/:token"
-        element={<ResetPassword />}
-      />
-
-      {/* SUCCESS PAGE */}
-
-      <Route
-        path="/success"
-        element={<SuccessReset />}
-      />
-
-      {/* WELCOME PAGE */}
-
-      <Route
-        path="/welcome"
-        element={<WelcomeBlog />}
-      />
-
-    </Routes>
+    </div>
 
   );
 
